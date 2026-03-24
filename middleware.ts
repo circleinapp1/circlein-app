@@ -7,6 +7,9 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
 
+    // BYPASS: Allow all routes through for development preview
+    return NextResponse.next();
+
     // CRITICAL: Allow ALL /api/ routes through (including cron)
     if (pathname.startsWith('/api/')) {
       console.log('✅ API ROUTE - BYPASSING AUTH:', pathname);
@@ -79,27 +82,9 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
-        const { pathname } = req.nextUrl;
-        
-        // CRITICAL: Allow ALL /api/ routes without authentication
-        if (pathname.startsWith('/api/')) {
-          return true;
-        }
-        
-        // Allow access to public pages (landing page, auth pages, legal pages)
-        if (pathname === '/' || 
-            pathname.startsWith('/auth') || 
-            pathname.startsWith('/landing') ||
-            pathname === '/privacy' ||
-            pathname === '/terms' ||
-            pathname === '/security' ||
-            pathname.startsWith('/contact')) {
-          return true;
-        }
-        
-        // Require authentication for all other routes
-        return !!token;
+      authorized: () => {
+        // BYPASS: Allow all routes for development preview
+        return true;
       },
     },
   }

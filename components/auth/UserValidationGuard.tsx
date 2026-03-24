@@ -19,6 +19,9 @@ export function UserValidationGuard() {
   const router = useRouter();
 
   useEffect(() => {
+    // BYPASS: Disabled for development preview
+    return;
+    
     // Only run validation if user is authenticated
     if (status !== 'authenticated' || !session?.user?.email) {
       return;
