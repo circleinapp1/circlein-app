@@ -4,10 +4,17 @@ import React, { createContext, useContext, useState, useEffect, useRef, useMemo 
 import { Bell, X, Check, Calendar, Users, Settings, AlertTriangle, ChevronRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
-import { collection, query, where, onSnapshot, orderBy, limit, updateDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+
+// Mock session for preview
+const mockSession = {
+  user: {
+    id: 'preview-user',
+    name: 'Preview User',
+    email: 'preview@circlein.app',
+    communityId: 'preview-community',
+  }
+};
 
 // Simplified, enterprise-grade notification type
 export interface Notification {
@@ -141,7 +148,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const { data: session } = useSession();
+  const session = mockSession; // Using mock for preview
   const pathname = usePathname();
 
   // Close panel when route changes
@@ -167,84 +174,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     localStorage.setItem('circleInNotifications', JSON.stringify(notifications));
   }, [notifications]);
 
-  // Listen for community notifications from Firestore (real-time only)
-  useEffect(() => {
-    if (!session?.user?.communityId || !session?.user?.email) return;
-
-    const connectionTime = new Date();
-    console.log('🔔 Notification listener connected at:', connectionTime.toISOString());
-
-    const q = query(
-      collection(db, 'communityNotifications'),
-      where('communityId', '==', session.user.communityId),
-      orderBy('timestamp', 'desc'),
-      limit(50)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const docData = change.doc.data() as any;
-          const notificationData = {
-            ...docData,
-            timestamp: docData.timestamp?.toDate() || new Date()
-          };
-
-          // Only show notifications created AFTER connection time
-          if (notificationData.timestamp < connectionTime) {
-            return;
-          }
-
-          // Don't show notification to the sender
-          if (notificationData.senderEmail === session?.user?.email) {
-            return;
-          }
-
-          // Check targeting
-          if (notificationData.targetUser && notificationData.targetUser !== session?.user?.email) {
-            return;
-          }
-
-          if (notificationData.recipients && notificationData.recipients !== 'all' && notificationData.recipients !== session?.user?.email) {
-            return;
-          }
-
-          // Convert to local notification format
-          const localNotification: Notification = {
-            id: change.doc.id,
-            title: notificationData.title || 'Community Update',
-            message: notificationData.message || 'New community notification',
-            type: notificationData.type || 'system',
-            priority: notificationData.priority || 'normal',
-            read: false,
-            createdAt: notificationData.timestamp.getTime(),
-            autoHide: notificationData.autoHide ?? false,
-            duration: notificationData.duration ?? 5000
-          };
-
-          setNotifications(prev => {
-            if (prev.some(n => n.id === localNotification.id)) {
-              return prev;
-            }
-            return [localNotification, ...prev];
-          });
-
-          // Mark as delivered
-          updateDoc(doc(db, 'communityNotifications', change.doc.id), {
-            delivered: true,
-            deliveredAt: new Date()
-          }).catch(console.error);
-        }
-      });
-    }, (error) => {
-      console.error('Error listening to community notifications:', error);
-    });
-
-    return () => {
-      console.log('🔔 Notification listener disconnected');
-      unsubscribe();
-    };
-  }, [session?.user?.communityId, session?.user?.email]);
+  // BYPASS: Firestore listener disabled for preview
+  // Real-time notifications would be fetched from Firebase here
 
   const addNotification = (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
     const now = Date.now();
