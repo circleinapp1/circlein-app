@@ -1,25 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Home, Settings, BookOpen, Users, Shield, Sun, Moon, Bell, LogOut, MessageCircle } from 'lucide-react';
 import { useTheme } from '../providers/theme-provider';
 import { Button } from '@/components/ui/button';
+import { signOut } from 'next-auth/react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { CircleInLogo } from '@/components/ui';
-
-// Mock session for preview
-const mockSession = {
-  user: {
-    id: 'preview-user',
-    name: 'Preview User',
-    email: 'preview@circlein.app',
-    role: 'admin', // Show admin features for demo
-  }
-};
 
 // Fluid sidebar animation - expands on hover
 const sidebarVariants = {
@@ -59,7 +51,7 @@ interface SidebarProps {
 export function Sidebar({ onClose, onCollapseChange }: SidebarProps = {}) {
   const [isHovered, setIsHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const session = mockSession; // Using mock for preview
+  const { data: session } = useSession();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
@@ -401,7 +393,7 @@ export function Sidebar({ onClose, onCollapseChange }: SidebarProps = {}) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => alert('Sign out disabled for preview')}
+                    onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                     className="w-11 h-11 rounded-xl hover:bg-[hsl(var(--destructive))/0.1]"
                   >
                     <LogOut className="w-5 h-5 text-[hsl(var(--destructive))]" />
@@ -413,7 +405,7 @@ export function Sidebar({ onClose, onCollapseChange }: SidebarProps = {}) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => alert('Sign out disabled for preview')}
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
                 className="w-full justify-start gap-3 px-3 py-2.5 rounded-xl hover:bg-[hsl(var(--destructive))/0.1] text-[hsl(var(--destructive))]"
               >
                 <LogOut className="w-5 h-5" />

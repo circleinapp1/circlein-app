@@ -1,19 +1,9 @@
 'use client';
 
 import { NotificationBell, NotificationPanel } from '@/components/notifications/NotificationSystem';
+import { useSession, signOut } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { Search, User, Settings, UserCircle, LogOut, ChevronRight, X } from 'lucide-react';
-
-// Mock session for preview
-const mockSession = {
-  user: {
-    id: 'preview-user',
-    name: 'Preview User',
-    email: 'preview@circlein.app',
-    image: null,
-    role: 'admin',
-  }
-};
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,7 +24,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick, isMenuOpen = false }: HeaderProps) {
-  const session = mockSession; // Using mock for preview
+  const { data: session } = useSession();
   const { searchQuery, setSearchQuery } = useSearch();
   const pathname = usePathname();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -222,7 +212,7 @@ export function Header({ onMenuClick, isMenuOpen = false }: HeaderProps) {
             {/* Sign Out */}
             <div className="py-1 border-t border-border">
               <DropdownMenuItem 
-                onClick={() => alert('Sign out disabled for preview')} 
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })} 
                 className={cn(
                   "mx-1 rounded-lg px-3 py-2.5 cursor-pointer",
                   "focus:bg-[hsl(var(--destructive))/0.1]",

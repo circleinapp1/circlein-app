@@ -1,12 +1,13 @@
 'use client';
 
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { ReactNode } from 'react';
 
 /**
  * Wrapper component that synchronizes NextAuth with Firebase Auth
- * BYPASSED for development preview
+ * This ensures Firestore rules work correctly by authenticating users with Firebase
  */
 export function FirebaseAuthSync({ children }: { children: ReactNode }) {
-  // BYPASS: Disabled Firebase auth for preview
+  useFirebaseAuth();
   return <>{children}</>;
 }

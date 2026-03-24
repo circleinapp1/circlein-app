@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { SearchProvider } from '@/components/providers/search-provider';
+import { EnhancedNotificationListener } from '@/components/notifications/EnhancedNotificationListener';
+import { RealtimeNotificationListener } from '@/components/notifications/RealtimeNotificationListener';
 import { FirebaseAuthSync } from '@/components/firebase-auth-sync';
+import { UserValidationGuard } from '@/components/auth/UserValidationGuard';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useReminderChecker } from '@/hooks/useReminderChecker';
 import { SidebarContext } from '@/hooks/useSidebarContext';
@@ -24,7 +27,8 @@ export default function AppLayout({
     <FirebaseAuthSync>
       <SearchProvider>
         <SidebarContext.Provider value={{ isCollapsed: sidebarCollapsed, setIsCollapsed: setSidebarCollapsed }}>
-          
+          {/* User Validation Guard - Forces logout if user is deleted */}
+          <UserValidationGuard />
           
           <div className="flex h-screen bg-background overflow-hidden">
             {/* Desktop Sidebar */}
@@ -78,7 +82,9 @@ export default function AppLayout({
               </main>
             </div>
             
-            
+            {/* Notification Listeners */}
+            <EnhancedNotificationListener />
+            <RealtimeNotificationListener />
           </div>
         </SidebarContext.Provider>
       </SearchProvider>
