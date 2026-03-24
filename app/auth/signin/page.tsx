@@ -24,7 +24,6 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const { theme, setTheme } = useTheme();
 
-  // Check for error parameter
   useEffect(() => {
     const error = searchParams.get('error');
     if (error) {
@@ -48,7 +47,6 @@ function SignInContent() {
     }
   }, [searchParams]);
 
-  // Email validation
   const validateEmail = (value: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isValid = emailRegex.test(value);
@@ -133,20 +131,15 @@ function SignInContent() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Panel - Branding (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 dark:from-indigo-900 dark:via-violet-900 dark:to-purple-950">
-        {/* Subtle pattern overlay */}
+      {/* Left Panel - Brand (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[hsl(var(--primary))]">
+        {/* Subtle architectural pattern */}
         <div 
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: 'radial-gradient(rgba(255,255,255,0.3) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
-        
-        {/* Floating gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-300/10 rounded-full blur-3xl" />
         
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center px-12 xl:px-16">
@@ -157,15 +150,15 @@ function SignInContent() {
           >
             <div className="flex items-center gap-3 mb-8">
               <CircleInLogo className="w-12 h-12" />
-              <span className="text-2xl font-bold text-white">CircleIn</span>
+              <span className="text-2xl font-serif text-white">CircleIn</span>
             </div>
             
-            <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+            <h1 className="font-serif text-4xl xl:text-5xl text-white mb-6 leading-tight">
               Welcome back to<br />
-              <span className="text-indigo-200">your community</span>
+              <span className="text-white/80">your community</span>
             </h1>
             
-            <p className="text-lg text-indigo-100/80 max-w-md leading-relaxed">
+            <p className="text-lg text-white/70 max-w-md leading-relaxed">
               Sign in to manage bookings, connect with neighbors, and stay updated with your community.
             </p>
           </motion.div>
@@ -175,7 +168,7 @@ function SignInContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="mt-12 flex items-center gap-6 text-sm text-indigo-200/70"
+            className="mt-12 flex items-center gap-6 text-sm text-white/60"
           >
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
@@ -190,12 +183,12 @@ function SignInContent() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col bg-white dark:bg-slate-950 transition-colors duration-300">
+      <div className="flex-1 flex flex-col bg-background transition-colors duration-300">
         {/* Header with theme toggle */}
         <div className="flex items-center justify-between p-4 sm:p-6">
           <Link href="/" className="flex items-center gap-2 lg:hidden">
             <CircleInLogo className="w-8 h-8" />
-            <span className="text-lg font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="text-lg font-serif text-foreground">
               CircleIn
             </span>
           </Link>
@@ -203,11 +196,14 @@ function SignInContent() {
           <div className="lg:ml-auto">
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="p-2.5 rounded-[10px] bg-muted hover:bg-muted/80 transition-colors"
               aria-label="Toggle theme"
             >
-              <Sun className="w-5 h-5 text-amber-500 rotate-0 scale-100 transition-all dark:rotate-90 dark:scale-0" />
-              <Moon className="absolute w-5 h-5 text-indigo-400 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" style={{ marginTop: '-20px' }} />
+              {theme === 'dark' ? (
+                <Sun className="w-5 h-5 text-amber-500" />
+              ) : (
+                <Moon className="w-5 h-5 text-muted-foreground" />
+              )}
             </button>
           </div>
         </div>
@@ -222,20 +218,20 @@ function SignInContent() {
           >
             {/* Mobile heading */}
             <div className="text-center mb-8 lg:hidden">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              <h1 className="font-serif text-2xl sm:text-3xl text-foreground mb-2">
                 Welcome back
               </h1>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-muted-foreground">
                 Sign in to your account
               </p>
             </div>
 
             {/* Desktop heading */}
             <div className="hidden lg:block mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              <h2 className="font-serif text-2xl text-foreground mb-2">
                 Sign in
               </h2>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-muted-foreground">
                 Enter your credentials to continue
               </p>
             </div>
@@ -244,15 +240,15 @@ function SignInContent() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">
                   Email address
                 </Label>
                 <div className="relative">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Mail className={`w-[18px] h-[18px] transition-colors duration-200 ${
                       focusedField === 'email' 
-                        ? 'text-indigo-500 dark:text-indigo-400' 
-                        : 'text-slate-400 dark:text-slate-500'
+                        ? 'text-[hsl(var(--accent))]' 
+                        : 'text-muted-foreground'
                     }`} />
                   </div>
                   <Input
@@ -263,19 +259,7 @@ function SignInContent() {
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
                     placeholder="name@example.com"
-                    className={`
-                      h-12 pl-11 pr-11 text-base
-                      bg-slate-50 dark:bg-slate-900
-                      border-slate-200 dark:border-slate-800
-                      text-slate-900 dark:text-white
-                      placeholder:text-slate-400 dark:placeholder:text-slate-500
-                      rounded-xl
-                      transition-all duration-200
-                      focus:bg-white dark:focus:bg-slate-900
-                      focus:border-indigo-500 dark:focus:border-indigo-500
-                      focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/20
-                      hover:border-slate-300 dark:hover:border-slate-700
-                    `}
+                    className="h-12 pl-11 pr-11"
                     required
                   />
                   <AnimatePresence>
@@ -286,7 +270,7 @@ function SignInContent() {
                         exit={{ scale: 0, opacity: 0 }}
                         className="absolute right-3.5 top-1/2 -translate-y-1/2"
                       >
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <CheckCircle2 className="w-5 h-5 text-[hsl(var(--success))]" />
                       </motion.div>
                     )}
                     {emailValid === false && (
@@ -296,7 +280,7 @@ function SignInContent() {
                         exit={{ scale: 0, opacity: 0 }}
                         className="absolute right-3.5 top-1/2 -translate-y-1/2"
                       >
-                        <AlertCircle className="w-5 h-5 text-red-500" />
+                        <AlertCircle className="w-5 h-5 text-[hsl(var(--destructive))]" />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -305,15 +289,15 @@ function SignInContent() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">
                   Password
                 </Label>
                 <div className="relative">
                   <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <Lock className={`w-[18px] h-[18px] transition-colors duration-200 ${
                       focusedField === 'password' 
-                        ? 'text-indigo-500 dark:text-indigo-400' 
-                        : 'text-slate-400 dark:text-slate-500'
+                        ? 'text-[hsl(var(--accent))]' 
+                        : 'text-muted-foreground'
                     }`} />
                   </div>
                   <Input
@@ -324,25 +308,13 @@ function SignInContent() {
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     placeholder="Enter your password"
-                    className={`
-                      h-12 pl-11 pr-11 text-base
-                      bg-slate-50 dark:bg-slate-900
-                      border-slate-200 dark:border-slate-800
-                      text-slate-900 dark:text-white
-                      placeholder:text-slate-400 dark:placeholder:text-slate-500
-                      rounded-xl
-                      transition-all duration-200
-                      focus:bg-white dark:focus:bg-slate-900
-                      focus:border-indigo-500 dark:focus:border-indigo-500
-                      focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/20
-                      hover:border-slate-300 dark:hover:border-slate-700
-                    `}
+                    className="h-12 pl-11 pr-11"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -358,23 +330,14 @@ function SignInContent() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="
-                  w-full h-12 text-base font-semibold rounded-xl
-                  bg-slate-900 dark:bg-white
-                  text-white dark:text-slate-900
-                  hover:bg-slate-800 dark:hover:bg-slate-100
-                  transition-all duration-200
-                  hover:scale-[1.02] active:scale-[0.98]
-                  disabled:opacity-50 disabled:hover:scale-100
-                  shadow-lg shadow-slate-900/10 dark:shadow-white/10
-                "
+                className="w-full h-12 text-base font-semibold"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <motion.span
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      className="w-5 h-5 border-2 border-white/30 dark:border-slate-900/30 border-t-white dark:border-t-slate-900 rounded-full"
+                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
                     />
                     Signing in...
                   </span>
@@ -390,10 +353,10 @@ function SignInContent() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-slate-950 px-3 text-slate-500 dark:text-slate-400">
+                <span className="bg-background px-3 text-muted-foreground">
                   or continue with
                 </span>
               </div>
@@ -405,16 +368,7 @@ function SignInContent() {
               variant="outline"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="
-                w-full h-12 text-base font-medium rounded-xl
-                bg-white dark:bg-slate-900
-                border-slate-200 dark:border-slate-800
-                text-slate-700 dark:text-slate-300
-                hover:bg-slate-50 dark:hover:bg-slate-800
-                hover:border-slate-300 dark:hover:border-slate-700
-                transition-all duration-200
-                hover:scale-[1.02] active:scale-[0.98]
-              "
+              className="w-full h-12 text-base font-medium"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -426,11 +380,11 @@ function SignInContent() {
             </Button>
 
             {/* Sign Up Link */}
-            <p className="text-center mt-8 text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-center mt-8 text-sm text-muted-foreground">
               Don't have an account?{' '}
               <Link
                 href="/auth/signup"
-                className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
+                className="font-medium text-[hsl(var(--accent))] hover:underline transition-colors"
               >
                 Create account
               </Link>
@@ -440,13 +394,13 @@ function SignInContent() {
 
         {/* Footer */}
         <div className="p-4 sm:p-6 text-center">
-          <p className="text-xs text-slate-500 dark:text-slate-500">
+          <p className="text-xs text-muted-foreground">
             By signing in, you agree to our{' '}
-            <Link href="/terms" className="underline hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+            <Link href="/terms" className="underline hover:text-foreground transition-colors">
               Terms
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="underline hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+            <Link href="/privacy" className="underline hover:text-foreground transition-colors">
               Privacy Policy
             </Link>
           </p>
@@ -459,8 +413,8 @@ function SignInContent() {
 export default function SignIn() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
-        <div className="w-8 h-8 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-[hsl(var(--accent))]/30 border-t-[hsl(var(--accent))] rounded-full animate-spin" />
       </div>
     }>
       <SignInContent />

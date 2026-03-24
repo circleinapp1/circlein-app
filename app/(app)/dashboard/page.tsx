@@ -1,11 +1,10 @@
 'use client';
 
-// Disable static generation for this page
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -15,13 +14,12 @@ import {
   Ban, 
   AlertTriangle, 
   ArrowRight,
-  Sparkles,
   Building2,
-  ChevronRight,
-  Search as SearchIcon
+  BookOpen,
+  CalendarDays,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useUserCreation } from '@/hooks/useUserCreation';
 import { useSearch } from '@/components/providers/search-provider';
@@ -42,14 +40,8 @@ interface Amenity {
   booking?: {
     maxPeople: number;
     slotDuration: number;
-    weekdayHours: {
-      startTime: string;
-      endTime: string;
-    };
-    weekendHours: {
-      startTime: string;
-      endTime: string;
-    };
+    weekdayHours: { startTime: string; endTime: string; };
+    weekendHours: { startTime: string; endTime: string; };
   };
   rules?: {
     maxSlotsPerFamily: number;
@@ -57,119 +49,66 @@ interface Amenity {
   };
 }
 
-// Premium animation variants
+// Premium stagger animation
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.05 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 16, scale: 0.98 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: {
-      type: "spring" as const,
-      stiffness: 400,
-      damping: 30,
-    },
+    transition: { type: "spring", stiffness: 400, damping: 30 },
   },
 };
 
-const cardHoverVariants = {
-  rest: { scale: 1, y: 0 },
-  hover: { 
-    scale: 1.01, 
-    y: -2,
-    transition: { 
-      type: "spring" as const, 
-      stiffness: 400, 
-      damping: 25 
-    }
-  },
-  tap: { scale: 0.99 }
-};
-
-// Premium Skeleton Loader
+// Skeleton Card for loading
 function SkeletonCard() {
   return (
-    <div className="group relative bg-white dark:bg-slate-900/80 rounded-2xl border border-slate-200 dark:border-slate-800/60 overflow-hidden shadow-sm">
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-slate-200/60 dark:via-slate-800/50 to-transparent" />
-      
-      {/* Image skeleton */}
-      <div className="relative h-44 bg-slate-100 dark:bg-slate-800/80">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-200/40 dark:from-slate-700/50 to-transparent" />
-      </div>
-      
-      {/* Content skeleton */}
-      <div className="p-5 space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="h-6 bg-slate-200 dark:bg-slate-700/80 rounded-lg w-3/4" />
-          <div className="h-6 bg-slate-200 dark:bg-slate-700/80 rounded-full w-16" />
-        </div>
+    <div className="bg-card rounded-xl overflow-hidden shadow-card">
+      <div className="h-40 skeleton" />
+      <div className="p-6 space-y-4">
+        <div className="h-5 skeleton rounded w-3/4" />
         <div className="space-y-2">
-          <div className="h-4 bg-slate-100 dark:bg-slate-800/60 rounded w-full" />
-          <div className="h-4 bg-slate-100 dark:bg-slate-800/60 rounded w-2/3" />
+          <div className="h-4 skeleton rounded w-full" />
+          <div className="h-4 skeleton rounded w-2/3" />
         </div>
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-4">
-            <div className="h-4 bg-slate-100 dark:bg-slate-800/60 rounded w-16" />
-            <div className="h-4 bg-slate-100 dark:bg-slate-800/60 rounded w-16" />
-          </div>
+        <div className="flex gap-4 pt-2">
+          <div className="h-4 skeleton rounded w-16" />
+          <div className="h-4 skeleton rounded w-16" />
         </div>
-        <div className="h-11 bg-slate-100 dark:bg-slate-800/60 rounded-xl w-full mt-4" />
+        <div className="h-10 skeleton rounded-[10px] w-full mt-4" />
       </div>
     </div>
   );
 }
 
-// Premium Amenity Card Component
-function AmenityCard({ amenity, index }: { amenity: Amenity; index: number }) {
+// Premium Amenity Card with hover elevation
+function AmenityCard({ amenity }: { amenity: Amenity }) {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <motion.div
-      variants={itemVariants}
-      initial="rest"
-      whileHover="hover"
-      whileTap="tap"
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-    >
-      <Link href={`/amenity/${amenity.id}`} className="block h-full">
-        <motion.div 
-          variants={cardHoverVariants}
-          className={cn(
-            "group relative h-full bg-white dark:bg-slate-900/80 rounded-2xl overflow-hidden",
-            "border border-slate-200 dark:border-slate-800/60",
-            "shadow-sm hover:shadow-lg hover:shadow-slate-200/60 dark:hover:shadow-slate-900/50",
-            "transition-shadow duration-300",
-            amenity.isBlocked && "opacity-75"
-          )}
-        >
-          {/* Image Container */}
-          <div className="relative h-36 sm:h-44 overflow-hidden bg-slate-100 dark:bg-slate-800">
-            {/* Placeholder gradient while loading */}
-            <div className={cn(
-              "absolute inset-0 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800",
-              "transition-opacity duration-500",
-              imageLoaded ? "opacity-0" : "opacity-100"
-            )} />
-            
+    <motion.div variants={itemVariants}>
+      <Link href={`/amenity/${amenity.id}`} className="block h-full group">
+        <div className={cn(
+          "h-full bg-card rounded-xl overflow-hidden",
+          "shadow-card transition-all duration-200",
+          "hover:shadow-card-hover hover:-translate-y-1",
+          "border border-transparent hover:border-[hsl(var(--border))]",
+          amenity.isBlocked && "opacity-75"
+        )}>
+          {/* Image */}
+          <div className="relative h-40 overflow-hidden bg-muted">
             <img
               src={amenity.imageUrl || 'https://images.pexels.com/photos/296282/pexels-photo-296282.jpeg?auto=compress&cs=tinysrgb&w=600'}
               alt={amenity.name}
               className={cn(
-                "w-full h-full object-cover transition-all duration-700",
+                "w-full h-full object-cover transition-all duration-500",
                 "group-hover:scale-105",
                 imageLoaded ? "opacity-100" : "opacity-0"
               )}
@@ -177,133 +116,125 @@ function AmenityCard({ amenity, index }: { amenity: Amenity; index: number }) {
               onLoad={() => setImageLoaded(true)}
             />
             
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            {/* Status Badge */}
+            {/* Status Pill */}
             <div className="absolute top-3 right-3">
-              <AnimatePresence>
-                {amenity.isBlocked ? (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                  >
-                    <Badge className="bg-red-500/90 text-white border-0 shadow-lg backdrop-blur-sm px-2.5 py-1 text-xs font-medium">
-                      <Ban className="w-3 h-3 mr-1" />
-                      Blocked
-                    </Badge>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                  >
-                    <Badge className="bg-emerald-500/90 text-white border-0 shadow-lg backdrop-blur-sm px-2.5 py-1 text-xs font-medium">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      Available
-                    </Badge>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {amenity.isBlocked ? (
+                <span className="badge-error flex items-center gap-1">
+                  <Ban className="w-3 h-3" />
+                  Blocked
+                </span>
+              ) : (
+                <span className="badge-success flex items-center gap-1">
+                  Available
+                </span>
+              )}
             </div>
-
-            {/* Quick action on hover */}
-            <motion.div 
-              className="absolute bottom-3 left-3 right-3"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center gap-2 text-white text-sm font-medium">
-                <span>View Details</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </motion.div>
           </div>
 
           {/* Content */}
-          <div className="p-4 sm:p-5">
-            {/* Title & Description */}
-            <div className="mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-1 sm:mb-1.5 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                {amenity.name}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                {amenity.description}
-              </p>
-            </div>
+          <div className="p-6">
+            <h3 className="font-serif text-lg text-foreground mb-2 group-hover:text-[hsl(var(--accent))] transition-colors">
+              {amenity.name}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+              {amenity.description}
+            </p>
 
             {/* Block Reason */}
             {amenity.isBlocked && amenity.blockReason && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mb-4 p-3 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900/50"
-              >
-                <div className="flex items-start gap-2 text-sm text-red-700 dark:text-red-300">
+              <div className="mb-4 p-3 bg-[hsl(var(--destructive))/0.05] rounded-lg border-l-2 border-[hsl(var(--destructive))]">
+                <div className="flex items-start gap-2 text-sm text-[hsl(var(--destructive))]">
                   <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span className="line-clamp-2">{amenity.blockReason}</span>
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {/* Meta Info */}
-            <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <div className="p-1 rounded-md bg-slate-100 dark:bg-slate-800">
-                  <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </div>
-                <span>Max {amenity.booking?.maxPeople || amenity.rules?.maxSlotsPerFamily || 2}</span>
+            {/* Meta */}
+            <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Users className="w-4 h-4" />
+                <span>Max {amenity.booking?.maxPeople || 2}</span>
               </div>
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <div className="p-1 rounded-md bg-slate-100 dark:bg-slate-800">
-                  <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
                 <span>{amenity.booking?.slotDuration || 2}h slots</span>
               </div>
             </div>
 
-            {/* CTA Button */}
+            {/* CTA */}
             <Button 
               className={cn(
-                "w-full h-10 sm:h-11 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300",
+                "w-full h-10 rounded-[10px] font-medium text-sm",
                 amenity.isBlocked 
-                  ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed" 
-                  : "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 shadow-sm hover:shadow-md"
+                  ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                  : "bg-[hsl(var(--accent))] text-white hover:bg-[hsl(16,55%,45%)]"
               )}
               disabled={amenity.isBlocked}
             >
               {amenity.isBlocked ? (
                 <>
-                  <Ban className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">Currently </span>Unavailable
+                  <Ban className="w-4 h-4 mr-2" />
+                  Unavailable
                 </>
               ) : (
                 <>
-                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                  <Calendar className="w-4 h-4 mr-2" />
                   Book Now
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
           </div>
-        </motion.div>
+        </div>
       </Link>
     </motion.div>
   );
 }
 
-// Empty State Component
-function EmptyState({ 
+// Quick Action Card
+function QuickActionCard({ 
+  href, 
+  icon: Icon, 
   title, 
-  description, 
-  action 
+  description,
+  color
 }: { 
+  href: string; 
+  icon: any; 
+  title: string; 
+  description: string;
+  color: string;
+}) {
+  return (
+    <Link href={href} className="block group">
+      <div className={cn(
+        "p-6 rounded-xl bg-card shadow-card",
+        "border border-transparent hover:border-[hsl(var(--border))]",
+        "transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1"
+      )}>
+        <div className={cn(
+          "w-12 h-12 rounded-xl flex items-center justify-center mb-4",
+          color
+        )}>
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+        <h3 className="font-medium text-foreground mb-1 group-hover:text-[hsl(var(--accent))] transition-colors">
+          {title}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {description}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+// Empty State
+function EmptyState({ title, description, action }: { 
   title: string; 
   description: string; 
-  action?: React.ReactNode 
+  action?: React.ReactNode;
 }) {
   return (
     <motion.div
@@ -311,13 +242,13 @@ function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center py-16 px-6"
     >
-      <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-6">
-        <Building2 className="w-8 h-8 text-slate-400 dark:text-slate-500" />
+      <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center mb-6">
+        <Building2 className="w-8 h-8 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 text-center">
+      <h3 className="font-serif text-lg text-foreground mb-2 text-center">
         {title}
       </h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-sm mb-6">
+      <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
         {description}
       </p>
       {action}
@@ -332,19 +263,27 @@ export default function Dashboard() {
   const router = useRouter();
   const { searchQuery, setSearchQuery } = useSearch();
 
-  // Filter amenities based on search query
+  // Filter amenities based on search
   const filteredAmenities = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return amenities;
-    }
-    
-    return amenities.filter((amenity: Amenity) =>
+    if (!searchQuery.trim()) return amenities;
+    return amenities.filter((amenity) =>
       amenity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       amenity.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [amenities, searchQuery]);
 
-  // Check if admin needs onboarding
+  // Get today's date formatted
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Community stats
+  const availableCount = amenities.filter(a => !a.isBlocked).length;
+
+  // Check admin onboarding
   useEffect(() => {
     const checkOnboarding = async () => {
       if (status === 'loading') return;
@@ -368,10 +307,9 @@ export default function Dashboard() {
           
           if (amenitiesSnapshot.size === 0) {
             router.push('/admin/onboarding');
-            return;
           }
         } catch (error) {
-          console.error('Error checking onboarding status:', error);
+          console.error('Error checking onboarding:', error);
         }
       }
     };
@@ -391,17 +329,13 @@ export default function Dashboard() {
         fetchAmenities();
       }
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [session]);
 
   const fetchAmenities = async () => {
     try {
-      if (!session?.user?.communityId) {
-        console.error('No community ID found in session');
-        return;
-      }
+      if (!session?.user?.communityId) return;
 
       const q = query(
         collection(db, 'amenities'), 
@@ -409,7 +343,6 @@ export default function Dashboard() {
       );
       
       const querySnapshot = await getDocs(q);
-      
       const amenityList = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -427,12 +360,12 @@ export default function Dashboard() {
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-100/50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900/50">
+      <div className="min-h-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header Skeleton */}
           <div className="mb-10">
-            <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl w-72 mb-3" />
-            <div className="h-5 bg-slate-100 dark:bg-slate-800/60 rounded-lg w-96" />
+            <div className="h-10 skeleton rounded-lg w-72 mb-3" />
+            <div className="h-5 skeleton rounded w-96" />
           </div>
           
           {/* Grid Skeleton */}
@@ -447,44 +380,76 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-slate-50 via-white to-slate-100/50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900/50">
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-indigo-50/15 dark:from-blue-950/20 dark:via-transparent dark:to-purple-950/10 pointer-events-none" />
-      
-      <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        {/* Header Section */}
-        <motion.div 
+    <div className="min-h-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        {/* Zone 1: Community Pulse */}
+        <motion.section
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="mb-6 sm:mb-10"
+          className="mb-8"
         >
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-1 sm:mb-2">
-                Community Amenities
-              </h1>
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl">
-                Discover and book shared spaces in your community. Select an amenity to view availability and make a reservation.
-              </p>
-            </div>
-            
-            {/* Stats Badge */}
-            {amenities.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900/80 rounded-full border border-slate-200 dark:border-slate-800/60 shadow-sm"
-              >
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {amenities.filter(a => !a.isBlocked).length} available
+          <div className="bg-card rounded-xl p-6 sm:p-8 shadow-card">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="font-serif text-2xl sm:text-3xl text-foreground mb-1">
+                  {formattedDate}
+                </h1>
+                <p className="text-muted-foreground">
+                  {session?.user?.communityId ? 'Your Community' : 'Welcome back'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--success))/0.1] rounded-full">
+                <div className="w-2 h-2 rounded-full bg-[hsl(var(--success))] animate-pulse" />
+                <span className="text-sm font-medium text-[hsl(var(--success))]">
+                  {availableCount} amenities available
                 </span>
-              </motion.div>
-            )}
+              </div>
+            </div>
           </div>
-        </motion.div>
+        </motion.section>
+
+        {/* Zone 2: Quick Actions */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-10"
+        >
+          <h2 className="font-serif text-lg text-foreground mb-4">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <QuickActionCard
+              href="/dashboard"
+              icon={Calendar}
+              title="Book Amenity"
+              description="Reserve a space"
+              color="bg-[hsl(var(--primary))]"
+            />
+            <QuickActionCard
+              href="/bookings"
+              icon={BookOpen}
+              title="My Bookings"
+              description="View reservations"
+              color="bg-[hsl(var(--accent))]"
+            />
+            <QuickActionCard
+              href="/calendar"
+              icon={CalendarDays}
+              title="View Calendar"
+              description="Check availability"
+              color="bg-[hsl(var(--success))]"
+            />
+            <QuickActionCard
+              href="/contact"
+              icon={MessageCircle}
+              title="Contact Admin"
+              description="Get help"
+              color="bg-[hsl(var(--warning))]"
+            />
+          </div>
+        </motion.section>
 
         {/* Search Results Indicator */}
         <AnimatePresence>
@@ -495,20 +460,13 @@ export default function Dashboard() {
               exit={{ opacity: 0, height: 0 }}
               className="mb-6"
             >
-              <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                <SearchIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm text-blue-700 dark:text-blue-300">
+              <div className="flex items-center gap-3 px-4 py-3 bg-[hsl(var(--primary))/0.05] rounded-xl border border-[hsl(var(--primary))/0.1]">
+                <span className="text-sm text-[hsl(var(--primary))]">
                   {filteredAmenities.length} result{filteredAmenities.length !== 1 ? 's' : ''} for "{searchQuery}"
                 </span>
                 <button 
-                  onClick={() => {
-                    const searchInput = document.querySelector('input[placeholder="Search..."]') as HTMLInputElement;
-                    if (searchInput) {
-                      searchInput.value = '';
-                      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                  }}
-                  className="ml-auto text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium"
+                  onClick={() => setSearchQuery('')}
+                  className="ml-auto text-sm text-[hsl(var(--primary))] hover:underline font-medium"
                 >
                   Clear
                 </button>
@@ -517,57 +475,62 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Empty States */}
-        {amenities.length === 0 && !loading && (
-          <EmptyState
-            title="No amenities found"
-            description="If you just completed onboarding, try refreshing the page. Your amenities will appear here once they're set up."
-            action={
-              <div className="flex flex-col sm:flex-row gap-3">
+        {/* Zone 3: Amenity Grid */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-serif text-lg text-foreground">
+              Amenities
+            </h2>
+          </div>
+
+          {/* Empty States */}
+          {amenities.length === 0 && !loading && (
+            <EmptyState
+              title="No amenities found"
+              description="Your community amenities will appear here once they're set up."
+              action={
                 <Button
                   onClick={() => {
                     setLoading(true);
                     fetchAmenities();
                   }}
-                  variant="outline"
-                  className="h-10 px-5 rounded-xl"
+                  className="btn-secondary"
                 >
                   Retry Loading
                 </Button>
-              </div>
-            }
-          />
-        )}
+              }
+            />
+          )}
 
-        {amenities.length > 0 && filteredAmenities.length === 0 && searchQuery.trim() && (
-          <EmptyState
-            title="No matching amenities"
-            description={`We couldn't find any amenities matching "${searchQuery}". Try adjusting your search terms.`}
-            action={
-              <Button
-                onClick={() => setSearchQuery('')}
-                variant="outline"
-                className="h-10 px-5 rounded-xl"
-              >
-                Clear Search
-              </Button>
-            }
-          />
-        )}
+          {amenities.length > 0 && filteredAmenities.length === 0 && searchQuery.trim() && (
+            <EmptyState
+              title="No matching amenities"
+              description={`No amenities match "${searchQuery}". Try different search terms.`}
+              action={
+                <Button
+                  onClick={() => setSearchQuery('')}
+                  className="btn-secondary"
+                >
+                  Clear Search
+                </Button>
+              }
+            />
+          )}
 
-        {/* Amenities Grid */}
-        {filteredAmenities.length > 0 && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6"
-          >
-            {filteredAmenities.map((amenity, index) => (
-              <AmenityCard key={amenity.id} amenity={amenity} index={index} />
-            ))}
-          </motion.div>
-        )}
+          {/* Amenities Grid */}
+          {filteredAmenities.length > 0 && (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {filteredAmenities.map((amenity) => (
+                <AmenityCard key={amenity.id} amenity={amenity} />
+              ))}
+            </motion.div>
+          )}
+        </section>
       </div>
     </div>
   );

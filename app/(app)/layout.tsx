@@ -30,7 +30,7 @@ export default function AppLayout({
           {/* User Validation Guard - Forces logout if user is deleted */}
           <UserValidationGuard />
           
-          <div className="flex h-screen bg-slate-100/50 dark:bg-slate-950 overflow-hidden">
+          <div className="flex h-screen bg-background overflow-hidden">
             {/* Desktop Sidebar */}
             <div className="hidden lg:block shrink-0">
               <Sidebar onCollapseChange={setSidebarCollapsed} />
@@ -65,12 +65,12 @@ export default function AppLayout({
             </AnimatePresence>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden min-w-0 bg-white/40 dark:bg-transparent">
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
               <Header 
                 onMenuClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
                 isMenuOpen={mobileMenuOpen}
               />
-              <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/80 via-white/60 to-slate-100/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900/50">
+              <main className="flex-1 overflow-auto bg-background">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

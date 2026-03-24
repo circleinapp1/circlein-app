@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { DM_Sans, Instrument_Serif } from 'next/font/google';
 import dynamic from 'next/dynamic';
 import { AuthProvider } from '@/components/providers/auth-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -19,14 +19,22 @@ const ToastContainer = dynamic(
 );
 const Toaster = dynamic(() => import('@/components/ui/sonner').then(mod => ({ default: mod.Toaster })), { ssr: false, loading: () => null });
 
-// Optimize font loading with minimal subsetting
-const inter = Inter({ 
+// Premium typography - DM Sans for UI, Instrument Serif for headings
+const dmSans = DM_Sans({ 
   subsets: ['latin'],
   display: 'swap',
   preload: true,
-  adjustFontFallback: true,
-  fallback: ['system-ui', 'arial'],
-  variable: '--font-inter',
+  variable: '--font-dm-sans',
+  weight: ['400', '500', '600', '700'],
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-instrument-serif',
+  weight: ['400'],
+  style: ['normal', 'italic'],
 });
 
 export const metadata: Metadata = {
@@ -132,7 +140,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${dmSans.variable} ${instrumentSerif.variable} font-sans`}>
         <LoadingScreen />
         <AuthProvider>
           <ThemeProvider defaultTheme="dark" storageKey="circlein-theme">
